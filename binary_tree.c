@@ -1,283 +1,366 @@
 #pragma once
 
-#include "binary_tree.h"
-#include "binary_tree_consts.h"
-#include "binary_tree_picture.c"
+#include "catalog_tree.h"
+
+const char* tree_state_text[]
+{
+    "EVERYTHING IS OKAY\n",
+    "TREE DOES NOT EXIST\n",
+    "MEMORY ACCESS DENIED\n",
+    "DEALING WITH NON-EXISTENT UNIT OR THE UNIT WAS DAMAGED\n",
+    "NO MEMORY FOR CONSTRUCTION\n",
+    "NOTHING TO DELETE\n",
+    "WRONG ADDRESS\n",
+    "MEMORY ACCESS DENIED\n",
+    "TOO BIG CAPACITY IS REQUIRED\n",
+    "ERROR WITH ACCESS TO ELEMENTS\n"
+};
+
+const char* TREE_FUNCTION_IDENTIFIERS[] =
+{
+    "CONSTRUCTION",
+    "DESTRUCTION",
+    "INSERTION",
+    "RESIZING",
+    "REMOVING",
+};
 
 #define ASSERTION(code)                                                  \
     fprintf(stderr, "-----------------!WARNING!----------------\n");     \
     fprintf(stderr, "IN FILE %s\nIN LINE %d\n", __FILE__, __LINE__);     \
     tree_print_errors(code);
 
+//#define DEBUG
 
-Binary_tree *tree_init(const long long amount)
+
+Catalog_tree *tree_init(FILE *input, const long long amount)
 {
-    Binary_tree *btree = (Binary_tree*)calloc(1, sizeof(Binary_tree));
-    if (!btree)
+    Catalog_tree *ctree = (Catalog_tree*)calloc(1, sizeof(Catalog_tree));
+    if (!ctree)
     {
         ASSERTION(TREE_NO_MEMORY);
-        tree_dump(btree, TREE_NO_MEMORY, CONSTRUCTION);
+        tree_dump(ctree, TREE_NO_MEMORY, CONSTRUCTION);
         return NULL;
     }
 
-    if (tree_construct(btree, amount) != TREE_OK)
+    if (tree_construct(ctree, input, amount) != TREE_OK)
     {
-        tree_destruct(btree);
+        tree_destruct(ctree);
         return NULL;
     }
 
-	return btree;
+	return ctree;
 }
 
-void tree_delete(Binary_tree *btree)
+void tree_delete(Catalog_tree *ctree)
 {
-    tree_destruct(btree);
+    tree_destruct(ctree);
 
-    if (btree)
-        free(btree);
+    if (ctree)
+        free(ctree);
 }
 
-tree_code tree_construct(Binary_tree *btree, const long long amount)
+tree_code tree_construct(Catalog_tree *ctree, FILE *input, const long long amount)
 {
-    btree->tree     = (Node*)calloc(amount, sizeof(Node));
-    if (!btree->tree)
+    ctree->tree     = (Node*)calloc(amount, sizeof(Node));
+    if (!ctree->tree)
     {
         ASSERTION(TREE_NO_MEMORY);
-        tree_dump(btree, TREE_NO_MEMORY, CONSTRUCTION);
+        tree_dump(ctree, TREE_NO_MEMORY, CONSTRUCTION);
         return TREE_NO_MEMORY;
     }
-    btree->capacity = amount;
-    btree->size     = 0;
+    ctree->capacity = amount;
+    ctree->size     = 0;
 
-	btree->tree[0].parent    = ABSENT;
-	btree->tree[0].right_son = ABSENT;
-	btree->tree[0].left_son  = ABSENT;
+	ctree->tree[0].parent    = ABSENT;
+	ctree->tree[0].right_son = ABSENT;
+	ctree->tree[0].left_son  = ABSENT;
+    ctree->tree[0].way       = YES;
 
-    btree->root_index = 0;
-	btree->first_free = 0;
+    ctree->root_index = 0;
+	ctree->first_free = 0;
 
 	for (long long i = 0; i < amount; i++)
 	{
-        btree->tree[i].next = i + 1;
+        ctree->tree[i].next = i + 1;
 	}
+
+	ctree->catalog = text_init(input);
 
 	return TREE_OK;
 }
 
-void tree_destruct(Binary_tree *btree)
+void tree_destruct(Catalog_tree *ctree)
 {
-    if (btree->tree)
-        free(btree->tree);
+    if (ctree->tree)
+        free(ctree->tree);
 }
 
-tree_code tree_resize(Binary_tree *btree, const double coefficient)
+long long tree_parent(Catalog_tree* ctree, long long index)
 {
-    size_t new_capacity = btree->capacity * coefficient;
+    return ctree->tree[index].parent;
+}
 
-    Node *new_tree = (Node*)realloc(btree->tree, sizeof(Node) * new_capacity);
+long long tree_right_son(Catalog_tree *ctree, long long index)
+{
+    return ctree->tree[index].right_son;
+}
+
+long long tree_left_son(Catalog_tree *ctree, long long index)
+{
+    return ctree->tree[index].left_son;
+}
+
+size_t tree_message_length(Catalog_tree* ctree, long long index)
+{
+    return ctree->tree[index].message_length;
+}
+
+char *tree_message_beginnig(Catalog_tree *ctree, long long index)
+{
+    return ctree->catalog->buffer + ctree->tree[index].length_from_beginning;
+}
+
+int tree_if_lief(Catalog_tree *ctree, long long index)
+{
+    if (index > ctree->size || index < ABSENT)
+        return 0;
+
+    if (tree_right_son(ctree, index) == ABSENT && tree_left_son(ctree, index) == ABSENT)
+        return 1;
+    else
+        return 0;
+}
+
+tree_code tree_resize(Catalog_tree *ctree, const double coefficient)
+{
+    size_t new_capacity = ctree->capacity * coefficient;
+
+    Node *new_tree = (Node*)realloc(ctree->tree, sizeof(Node) * new_capacity);
     if (!new_tree)
     {
         ASSERTION(TREE_NO_MEMORY);
-        tree_dump(btree, TREE_NO_MEMORY, RESIZING);
+        tree_dump(ctree, TREE_NO_MEMORY, RESIZING);
         return TREE_NO_MEMORY;
     }
 
-    btree->tree = new_tree;
+    ctree->tree = new_tree;
 
     if (coefficient > 1)
     {
-        for (long long i = btree->capacity; i < new_capacity; i++)
+        for (long long i = ctree->capacity; i < new_capacity; i++)
         {
-            btree->tree[i].next = i + 1;
+            ctree->tree[i].next = i + 1;
         }
     }
 
-    btree->capacity = new_capacity;
+    ctree->capacity = new_capacity;
 
     return TREE_OK;
 }
 
-long long tree_search(Binary_tree *btree, const char *message)   //Проход по циклу почему такой?
-{
-    for (long long i = 0; i < btree->size; i++)
+long long tree_search(Catalog_tree *ctree, const char *message)
+{   
+    size_t mes_len = strlen(message);
+
+    for (long long i = 0; i < ctree->size; i++)
     {
-        if (!strcmp(btree->tree[i].message, message))
-            return i;
+        long long length = tree_message_length(ctree, i);
+        if (mes_len < length)
+            continue;
+
+        char* tree_message = tree_message_beginnig(ctree, i);
+        for (size_t j = 0; j <= length; j++)
+        {
+            if (*(tree_message + j) != message[j])
+                break;
+
+            if (j == length)
+                return i;
+        }
     }
 
     return ABSENT;
 }
 
-tree_code tree_insert(Binary_tree *btree, long long *index_after, char answer, const char *message)
+tree_code tree_insert(Catalog_tree *ctree, long long *index_after, char answer, size_t length_from_begin, size_t message_length)
 {
-	if (*index_after > btree->size + 1)
+	if (*index_after > ctree->size + 1)
     {
         ASSERTION(TREE_OVERFLOW);
-        tree_dump(btree, TREE_OVERFLOW, INSERTION);
+        tree_dump(ctree, TREE_OVERFLOW, INSERTION);
         return TREE_OVERFLOW;
     }
 
-    if (btree->size + 1 >= btree->capacity)
+    if (ctree->size + 1 >= ctree->capacity)
     {
-        tree_code error = tree_resize(btree, RESIZE_UP);
+        tree_code error = tree_resize(ctree, RESIZE_UP);
         if (error != TREE_OK)
-        {
-            ASSERTION(error);
-            tree_dump(btree, error, INSERTION);
             return error;
-        }
     }
 
+	ctree->tree[ctree->first_free].length_from_beginning = length_from_begin;
+    ctree->tree[ctree->first_free].message_length        = message_length;
 	if (*index_after == ABSENT)
 	{
-		memcpy(btree->tree[btree->root_index].message, message, MAX_MESSAGE_LEN);
-		//btree->tree[btree->root_index].message = message;
-
-		btree->tree[btree->root_index].parent    = ABSENT;
-        btree->tree[btree->root_index].right_son = ABSENT;
-        btree->tree[btree->root_index].left_son  = ABSENT;
-
-        *index_after      = btree->root_index;
-        btree->first_free = btree->tree[btree->root_index].next;
+		ctree->tree[ctree->root_index].parent    = ABSENT;
 	}
 	else
 	{
-		memcpy(btree->tree[btree->first_free].message, message, MAX_MESSAGE_LEN);
-		//btree->tree[btree->first_free].message   = message;
-		//printf("%s\n", btree->tree[btree->first_free].message);
-        btree->tree[btree->first_free].parent    = *index_after;
-        btree->tree[btree->first_free].right_son = ABSENT;
-        btree->tree[btree->first_free].left_son  = ABSENT;
+        ctree->tree[ctree->first_free].parent    = *index_after;
 
         if (answer == YES)
-            btree->tree[*index_after].right_son = btree->first_free;
+        {
+            ctree->tree[*index_after].right_son = ctree->first_free;
+            ctree->tree[ctree->first_free].way       = YES;
+        }
         else
-            btree->tree[*index_after].left_son = btree->first_free;
-
-        *index_after      = btree->first_free;
-        btree->first_free = btree->tree[btree->first_free].next;
+        {
+            ctree->tree[*index_after].left_son = ctree->first_free;
+            ctree->tree[ctree->first_free].way      = NO;
+        }
     }
+    ctree->tree[ctree->first_free].right_son = ABSENT;
+    ctree->tree[ctree->first_free].left_son  = ABSENT;
 
-    btree->size++;
+    *index_after      = ctree->first_free;
+    ctree->first_free = ctree->tree[ctree->first_free].next;
+
+    ctree->size++;
+
+    return TREE_OK;
 }
 
-static void tree_remove_lief(Binary_tree *btree, long long index_after, char answer)
+static void tree_remove_lief(Catalog_tree *ctree, long long index_after, char answer)
 {
     if (index_after == ABSENT)
 	{
-        btree->tree[btree->root_index].next = btree->first_free;
-        btree->first_free = btree->root_index;
+        ctree->tree[ctree->root_index].next = ctree->first_free;
+        ctree->first_free = ctree->root_index;
 	}
 	else
 	{
-		btree->tree[index_after].next = btree->first_free;
-        btree->first_free = index_after;
+		ctree->tree[index_after].next = ctree->first_free;
+        ctree->first_free = index_after;
 
         if (answer == YES)
-            btree->tree[index_after].right_son = ABSENT;
+            ctree->tree[index_after].right_son = ABSENT;
         else
-            btree->tree[index_after].left_son = ABSENT;
+            ctree->tree[index_after].left_son = ABSENT;
 	}
 
-	btree->size--;
+	ctree->size--;
 }
 
-static void tree_remove_branch(Binary_tree *btree, long long branch_base)
+static void tree_remove_branch(Catalog_tree *ctree, long long branch_base)
 {
-    if (btree->tree[branch_base].right_son == ABSENT && btree->tree[branch_base].left_son == ABSENT && btree->tree[branch_base].parent >= 0)
+    long long parent = tree_parent(ctree, branch_base);
+    long long right  = tree_right_son(ctree, branch_base);
+    long long left   = tree_left_son(ctree, branch_base);
+    if (tree_if_lief(ctree, branch_base) && ctree->tree[branch_base].parent >= 0)
     {
-        if (btree->tree[btree->tree[branch_base].parent].right_son == branch_base)
+        if (tree_right_son(ctree, parent) == branch_base)
         {
-            tree_remove_lief(btree, btree->tree[branch_base].parent, YES);
+            tree_remove_lief(ctree, parent, YES);
             return;
         }
         else
         {
-            tree_remove_lief(btree, btree->tree[branch_base].parent, NO);
+            tree_remove_lief(ctree, parent, NO);
             return;
         }
     }
 
-    if (btree->tree[branch_base].right_son != ABSENT)
-        tree_remove_branch(btree, btree->tree[branch_base].right_son);
-    if (btree->tree[branch_base].left_son != ABSENT)
-        tree_remove_branch(btree, btree->tree[branch_base].left_son);
+    if (right != ABSENT)
+        tree_remove_branch(ctree, right);
+    if (left != ABSENT)
+        tree_remove_branch(ctree, left);
 
-    if (btree->tree[branch_base].parent == ABSENT)
+    if (parent == ABSENT)
     {
-        tree_remove_lief(btree, ABSENT, YES);
+        tree_remove_lief(ctree, ABSENT, YES);
         return;
     }
     else
     {
-        if (btree->tree[btree->tree[branch_base].parent].right_son == branch_base)
+        if (ctree->tree[branch_base].way == YES)
         {
-            tree_remove_lief(btree, btree->tree[branch_base].parent, YES);
+            tree_remove_lief(ctree, parent, YES);
             return;
         }
         else
         {
-            tree_remove_lief(btree, btree->tree[branch_base].parent, NO);
+            tree_remove_lief(ctree, parent, NO);
             return;
         }
     }
 }
 
-tree_code tree_clean_branch(Binary_tree *btree, long long branch_base)
+tree_code tree_clean_branch(Catalog_tree *ctree, long long branch_base)
 {
-    if (branch_base > btree->size || branch_base < ABSENT)
+    if (branch_base > ctree->size || branch_base < ABSENT)
     {
         ASSERTION(TREE_UNDERFLOW);
-        tree_dump(btree, TREE_UNDERFLOW, REMOVING);
+        tree_dump(ctree, TREE_UNDERFLOW, REMOVING);
         return TREE_UNDERFLOW;
     }
     tree_code error = TREE_OK;
 
-    tree_remove_branch(btree, branch_base);
+    tree_remove_branch(ctree, branch_base);
+
+    if (ctree->size < ctree->capacity / 4)
+    {
+        tree_code resize_error = tree_resize(ctree, RESIZE_DOWN);
+        if (resize_error != TREE_OK)
+            return resize_error;
+    }
 
     return error;
 }
 
-tree_code tree_check_pointer(Binary_tree *btree)
+tree_code tree_check_pointer(Catalog_tree *ctree)
 {
-    if (!btree || !btree->tree)
+    if (!ctree || !ctree->tree)
         return TREE_NULL;
 
-    if ((size_t)(btree) <= 4096 || (size_t)(btree->tree) <= 4096)
+    if ((size_t)(ctree) <= 4096 || (size_t)(ctree->tree) <= 4096)
         return TREE_SEG_FAULT;
 
     return TREE_OK;
 }
 
-void tree_check_connections(Binary_tree *btree, long long index, tree_code *error)
+void tree_check_connections(Catalog_tree *ctree, long long index, tree_code *error)
 {
-    if (btree->tree[index].right_son == ABSENT && btree->tree[index].left_son == ABSENT)
+    long long parent = tree_parent(ctree, index);
+    long long right  = tree_right_son(ctree, index);
+    long long left   = tree_left_son(ctree, index);
+    if (right == ABSENT && left == ABSENT)
         return;
-    else if (btree->tree[index].right_son < ABSENT || btree->tree[index].left_son < ABSENT)
+    else if (right < ABSENT || left < ABSENT)
     {
         *error = TREE_CONNECT_ERROR;
         return;
     }
 
-    if (btree->tree[index].right_son != ABSENT)
+    if (right != ABSENT)
     {
-        if (index != btree->tree[btree->tree[index].right_son].parent)
+        if (index != tree_parent(ctree, right))
         {
             *error = TREE_CONNECT_ERROR;
             return;
         }
 
-        tree_check_connections(btree, btree->tree[index].right_son, error);
+        tree_check_connections(ctree, right, error);
     }
-    if (btree->tree[index].left_son != ABSENT)
+    if (left != ABSENT)
     {
-        if (index != btree->tree[btree->tree[index].left_son].parent)
+        if (index != tree_parent(ctree, left))
         {
             *error = TREE_CONNECT_ERROR;
             return;
         }
 
-        tree_check_connections(btree, btree->tree[index].left_son, error);
+        tree_check_connections(ctree, left, error);
     }
 }
 
@@ -286,7 +369,7 @@ void tree_print_errors(tree_code code)
     printf("Error: %s\n", tree_state_text[code]);
 }
 
-void tree_dump(Binary_tree *btree, tree_code code, const tree_functions function)
+void tree_dump(Catalog_tree *ctree, tree_code code, const tree_functions function)
 {
     static long int doing = 0;
 
@@ -304,16 +387,16 @@ void tree_dump(Binary_tree *btree, tree_code code, const tree_functions function
 
     fprintf(log, "%s", tree_state_text[code]);
 
-    fprintf(log, "CURRENT CAPACITY IS %lld\n", btree->capacity);
-    fprintf(log, "CURRENT SIZE IS            %lld\n", btree->size);
+    fprintf(log, "CURRENT CAPACITY IS %lld\n", ctree->capacity);
+    fprintf(log, "CURRENT SIZE IS            %lld\n", ctree->size);
 
     fprintf(log, "</font><tt>\n");
 
-    char picture_name[MAX_PICTURE_NAME] = "";
+    char picture_name[MAX_PICTURE_NAME] = " ";
 
     sprintf(picture_name, "%s%ld.%s", PICTURE_NAME, doing, PICTURE_CODE_EXPANSION);
 
-    tree_print_picture(btree, picture_name);
+    tree_print_picture(ctree, picture_name);
 
     strncat(picture_name, ".", MAX_PICTURE_NAME);
     strncat(picture_name, PICTURE_EXPANSION, MAX_PICTURE_NAME);
@@ -327,49 +410,156 @@ void tree_dump(Binary_tree *btree, tree_code code, const tree_functions function
     doing++;
 }
 
-tree_code tree_verifier(Binary_tree *btree, const tree_functions requester)
+tree_code tree_verifier(Catalog_tree *ctree, const tree_functions requester)
 {
-    tree_code error = tree_check_pointer(btree);
+    tree_code error = tree_check_pointer(ctree);
     if (error != TREE_OK)
     {
         ASSERTION(error);
-        tree_dump(btree, error, requester);
+        tree_dump(ctree, error, requester);
         return error;
     }
 
-    long long  connections_number = btree->capacity - btree->size;
-    long long *free_indexes       = (long long*)calloc(btree->capacity, sizeof(long long));
+    long long  connections_number = ctree->capacity - ctree->size;
+    long long *free_indexes       = (long long*)calloc(ctree->capacity, sizeof(long long));
 
-    long long index = btree->first_free;
+    long long index = ctree->first_free;
     for (int i = 0; i < connections_number; i++)
     {
         if (free_indexes[index])
         {
             ASSERTION(TREE_CONNECT_ERROR);
-            tree_dump(btree, TREE_CONNECT_ERROR, requester);
+            tree_dump(ctree, TREE_CONNECT_ERROR, requester);
             return TREE_CONNECT_ERROR;
         }
         free_indexes[index]++;
 
-        index = btree->tree[index].next;
+        index = ctree->tree[index].next;
     }
     free(free_indexes);
 
-    if (btree->tree[btree->root_index].parent != ABSENT)
+    if (ctree->tree[ctree->root_index].parent != ABSENT)
     {
         ASSERTION(TREE_CONNECT_ERROR);
-        tree_dump(btree, TREE_CONNECT_ERROR, requester);
+        tree_dump(ctree, TREE_CONNECT_ERROR, requester);
         return TREE_CONNECT_ERROR;
     }
 
-    tree_check_connections(btree, btree->root_index, &error);
+    tree_check_connections(ctree, ctree->root_index, &error);
     if (error != TREE_OK)
     {
         ASSERTION(TREE_CONNECT_ERROR);
-        tree_dump(btree, TREE_CONNECT_ERROR, requester);
+        tree_dump(ctree, TREE_CONNECT_ERROR, requester);
         return TREE_CONNECT_ERROR;
     }
 
     return TREE_OK;
 }
+
+void tree_dot_call(const char *name_file, const char *expansion)
+{
+    char temp[512];
+    sprintf(temp, "dot %s -T%s -O", name_file, expansion);
+    system((char*)temp);
+}
+
+
+void tree_print_message_in_file(Catalog_tree *ctree, long long index, FILE *picture)
+{
+    long long length  = tree_message_length(ctree, index);
+    char*     message = tree_message_beginnig(ctree, index);
+    for (size_t i = 0; i <= length; i++)
+        fprintf(picture, "%c", message[i]);
+}
+
+void tree_print_picture_nodes(Catalog_tree *ctree, long long index, FILE *picture)
+{
+    #ifdef DEBUG
+    fprintf(picture, "  nod%lld[shape=\"none\", ", index);
+    fprintf(picture, "label = <<table border = \"0\" cellborder = \"1\" cellspacing = \"0\">\n");
+    fprintf(picture, "      <tr>\n      <td colspan = \"2\" bgcolor = \"HotPink\">parent %lld</td>\n    </tr>\n", ctree->tree[index].parent);
+    fprintf(picture, "      <tr>\n      <td colspan = \"2\" bgcolor = \"%s\">index %lld</td>\n     </tr>\n", COLOR_FILL_DIFFERENCE, index);
+    fprintf(picture, "      <tr>\n      <td colspan = \"2\" bgcolor = \"%s\">", COLOR_FILL_DIFFERENCE);
+    tree_print_message_in_file(ctree, index, picture);
+    fprintf(picture, "</td>\n     </tr>\n");
+    fprintf(picture, "      <tr>\n");
+    fprintf(picture, "          <td bgcolor = \"%s\">NO %lld</td>\n", COLOR_FILL_SONS, ctree->tree[index].left_son);
+    fprintf(picture, "          <td bgcolor = \"%s\">YES %lld</td>\n", COLOR_FILL_SONS, ctree->tree[index].right_son);
+    fprintf(picture, "      </tr>\n");
+    fprintf(picture, "      </table>>];\n");
+    #else
+    fprintf(picture, "  nod%lld[shape=\"none\", ", index);
+    if (tree_if_lief(ctree, index))
+        fprintf(picture, "fillcolor =  \"%s\", style=filled", COLOR_FILL_CHARACTER);
+    else
+        fprintf(picture, "fillcolor =  \"%s\", style=filled", COLOR_FILL_DIFFERENCE);
+    fprintf(picture, "  label = \"");
+    tree_print_message_in_file(ctree, index, picture);
+    fprintf(picture, "\"];\n");
+    #endif
+}
+
+void tree_generate_picture_nodes(Catalog_tree *ctree, long long index, FILE *picture)
+{
+    long long right = tree_right_son(ctree, index);
+    long long left = tree_left_son(ctree, index);
+    if (left < 0 && right < 0)
+    {
+        tree_print_picture_nodes(ctree, index, picture);
+
+        return;
+    }
+
+    tree_print_picture_nodes(ctree, index, picture);
+
+    if (left >= 0)
+    {
+        tree_generate_picture_nodes(ctree, left, picture);
+    }
+    if (right >= 0)
+    {
+        tree_generate_picture_nodes(ctree, right, picture);
+    }
+
+    return;
+}
+
+void tree_print_picture_sequence(Catalog_tree *ctree, long long index, FILE *picture)
+{
+    long long right = tree_right_son(ctree, index);
+    long long left = tree_left_son(ctree, index);
+    if (left < 0 && right < 0)
+    {
+        return;
+    }
+
+    if (left != ABSENT)
+    {
+        tree_print_picture_sequence(ctree, left, picture);
+        fprintf(picture, "      nod%lld->nod%lld[label=\"NO\"];\n", index, left);
+    }
+    if (right != ABSENT)
+    {
+        tree_print_picture_sequence(ctree, right, picture);
+        fprintf(picture, "      nod%lld->nod%lld[label=\"YES\"];\n", index, right);
+    }
+
+    return;
+}
+
+void tree_print_picture(Catalog_tree *ctree, const char *picture_name)
+{
+    FILE* picture = fopen(picture_name, "wb");
+
+    fprintf(picture, "digraph\n{\n  rankdir = TB;\n");
+    tree_generate_picture_nodes(ctree, ctree->root_index, picture);
+    fprintf(picture, "   ");
+    tree_print_picture_sequence(ctree, ctree->root_index, picture);
+    fprintf(picture, "}");
+
+    fclose(picture);
+
+    tree_dot_call(picture_name, PICTURE_EXPANSION);
+}
+
 
