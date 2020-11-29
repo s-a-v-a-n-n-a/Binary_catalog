@@ -1,0 +1,169 @@
+"is alive"
+[
+    "is phystech"
+    [
+        "is a student"
+        [
+            "is from B05-033"
+            [
+                "is on Linux"
+                [
+                    "is fond of hanging out together"
+                    [
+                        "is fond of buns in KSP"
+                        [
+                            "is interested in prices in KSP"
+                            [
+                                "Ksiusha Kolesnikova"
+                                "is kon'"
+                                [
+                                    "Maks Gorishniy"
+                                    "Mark"
+                                ]
+                            ]
+                            "Dima"
+                        ]
+                        "is interested in fishing"
+                        [
+                            "Vanya Leskin"
+                            "is interested in bioinformatics"
+                            [
+                                "Sonya Balanina"
+                                "is living with Petr"
+                                [
+                                    "Nikita Panov"
+                                    "Vlad Novikov"
+                                ]
+                            ]
+                        ]
+                    ]
+                    "is on Shindows"
+                    [
+                        "is definitely maths genious"
+                        [
+                            "Andrey Belyaev"
+                            "Anya Savchuk"
+                        ]
+                        "is most popular and followed student on industry course"
+                        [
+                            "Alex Dremov"
+                            "is trolled by Redkozubov"
+                            [
+                                "Artem Klimov"
+                                "Andrey Yakovlev"
+                            ]
+                        ]
+                    ]
+                ]
+                "is curator of B05-033"
+                [
+                    "Danya Borisov"
+                    "An average MIPT fun"
+                ]
+            ]
+            "An everage MIPT enjoyer"
+        ]
+        "is selling you something"
+        [
+            "does say 'thank you' after every purchase"
+            [
+                "Alisher"
+                "Canteen saleswoman"
+            ]
+            "does look for you in the shower"
+            [
+                "Tetya Zoya"
+                "does want to steal your food"
+                [
+                    "is already fried and eaten"
+                    [
+                        "A rat"
+                        "A cockroach"
+                    ]
+                    "is the most known living creature in MIPT"
+                    [
+                        "Poltorashka"
+                        "Sobaken#443"
+                    ]
+                ]
+            ]
+        ]
+    ]
+    "is a building"
+    [
+        "is a dormitory"
+        [
+            "is inhabited by a cat"
+            [
+                "is visited by Ded"
+                [
+                    "1ka"
+                    "6ka"
+                ]
+                "Secret bunker #3565"
+            ]
+            "is place of unknown things and events"
+            [
+                "does have some biologists inside"
+                [
+                    "Phystech.BIO"
+                    "is occupied by RTshniki"
+                    [
+                        "Microelectronics Building"
+                        "Digit"
+                    ]
+                ]
+                "does have library inside"
+                [
+                    "the main building"
+                    "is canteen situates here"
+                    [
+                        "suicide"
+                        [
+                            "KPM"
+                            "KSP"
+                        ]
+                        "is one of the oldest buildings"
+                        [
+                            "Laboratory Building"
+                            "does allow you to sTudI EaNgLiSh"
+                            [
+                                "Phystech.Kvant"
+                                "is inhabited by physicians"
+                                [
+                                    "Hospital"
+                                    "Arctic"
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+        "is a sport court"
+        [
+            "The great MIPT stadium"
+            "does shock you"
+            [
+                "Mathematical logic course with Evgeniy Dashkov"
+                "is associated with night-time debugging"
+                [
+                    "does have a chance of grading you with 16"
+                    [
+                        "Introduction to data structures course with Ilya Dedinsky"
+                        "Introduction to programming course with Sergey Babichev"
+                    ]
+                    "is fascinating to listen"
+                    [
+                        "Mathematical Analysis course with Vadim Redkozubov"
+                        "is dirty"
+                        [
+                            "seedbed"
+                            "Analytical geometry course with Anna Petrovich"
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ]
+]
