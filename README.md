@@ -6,7 +6,7 @@ This is binary catalog imitating Akinator game.
 **DESCRIPTION**
 ---------------
 Work of binary catalog is based on unbalanced binary tree. It contains questions in tree nodes and objects to guess in leaves. While working program orientates toward users answers. For example, if users chooses to answer "NO" it goes to the left son of the node. 
-The tree itself is stored in an array working like ![My-List](https://github.com/s-a-v-a-n-n-a/My-List). Every node has access to its left and right sons and parent. That is why no recusion is needed to work with tree.
+The tree itself is stored in an array working like [My-List](https://github.com/s-a-v-a-n-n-a/My-List). Every node has access to its left and right sons and parent. That is why no recusion is needed to work with tree.
 To contain strings of text the tree has special buffer. That helps to avoid extra doings with pointers on char arrays.
 
 **PROCESS OF WORK**
