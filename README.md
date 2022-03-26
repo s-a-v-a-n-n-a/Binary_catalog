@@ -12,12 +12,24 @@ To contain strings of text the tree has special buffer. That helps to avoid extr
 **PROCESS OF WORK**
 -------------------
 Before the work the program tells user what commands are available for her. For easier work we will also represent them here:
+<li>
 [h] : to remember commands
-[g] : to start the game 
+</li>
+<li>
+[g] : to start the game
+</li>
+<li>
 [d] <your input> : to input a new object. Tree will write it in special file to use after end of work
+</li>
+<li>
 [c] <first input> <second input> : to make program compare 2 objects
+</li>
+<li>
 [p] : to see the picture representation of the tree
+</li>
+<li>
 [e] : to end game
+</li>
   
 **SUBTLETIES OF USE**
 ---------------------
